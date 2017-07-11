@@ -1,5 +1,5 @@
 #include "GameScene.h"
-#include "JewelsGrid.h"
+#include "Grid.h"
 #include "GameOverScene.h"
 
 Scene* GameScene::createScene()
@@ -27,22 +27,25 @@ bool GameScene::init()
 	m_bg->setAnchorPoint(Vec2(0, 0));
 	m_bg->setTag(100); //1-4个bg的tag默认设置为100，101，102，103
 	addChild(m_bg);
+	//log("%f %f", m_bg);
+
+
 
 	//网格背景
 	auto board = Sprite::createWithTexture(texturecache->getTextureForKey("board.png"));
 	board->setAnchorPoint(Vec2(0, 1));
 	board->setPosition(Vec2(0, visibleSize.height));
-	board->setOpacity(80);  //满分255
+	board->setOpacity(80);  //满分255    //setOpacity()设置透明度 但是感觉没啥作用？？？？？
 	addChild(board);
 
 	//初始化网格数据，网格的原点在左下角
-	m_jewelsgrid = JewelsGrid::create(8, 8);
-	addChild(m_jewelsgrid);
-	m_jewelsgrid->setPosition(0, visibleSize.height - m_jewelsgrid->getRow() * GRID_WIDTH);
+	m_Cardsgrid = Grid::create(8, 8);
+	addChild(m_Cardsgrid);    //m_Cardsgrid是Grid对象，Grid继承自Node,默认锚点(0,0)
+	m_Cardsgrid->setPosition(0, visibleSize.height - m_Cardsgrid->getRow() * GRID_WIDTH);//!!!!!!!!!!!!!!!!!!!!!!!
 
 	//倒计时条外框
 	auto bounusbar_frame = Sprite::createWithTexture(texturecache->getTextureForKey("bonusbar.png"));
-	bounusbar_frame->setPosition(Vec2(visibleSize.width / 2, bounusbar_frame->getContentSize().height / 2 + 10));
+	bounusbar_frame->setPosition(Vec2(visibleSize.width / 2, bounusbar_frame->getContentSize().height / 2 + 10));//Sprite默认锚点(0.5,0.5)
 	addChild(bounusbar_frame);
 
 	//倒计时条bonusbar_fill.png
@@ -55,31 +58,32 @@ bool GameScene::init()
 
 	//分数条
 	auto bonus = Sprite::createWithTexture(texturecache->getTextureForKey("bonus.png"));
-	bonus->setPosition(visibleSize.width - bonus->getContentSize().width / 2 - 10, 80);
+	bonus->setPosition(visibleSize.width - bonus->getContentSize().width / 2 - 10, 80);//Sprite默认锚点(0.5,0.5)
 	addChild(bonus);
 
 	m_scorelabel = Label::createWithTTF("0", "fonts/Marker Felt.ttf", 24);
-	m_scorelabel->setAnchorPoint(Vec2(1, 0));
+	m_scorelabel->setAnchorPoint(Vec2(1, 0));//Label类本身没有setAnchorPoint()这个函数，也就是说没有默认锚点，所以这里要设置锚点
 	m_scorelabel->setPosition(visibleSize.width - 10, 35);
 	m_scorelabel->setTag(10);
-	m_scorelabel->enableOutline(Color4B::BLACK, 1);
+	m_scorelabel->enableOutline(Color4B::BLACK, 1);   //enableOutline()用来描边，但电脑上怎么显示还是白色？
 	addChild(m_scorelabel);
 
-	//测试用，刷新宝石阵列按钮
+	//测试用，刷新卡片阵列按钮
 	auto updateMenu = MenuItemFont::create("Update Map", CC_CALLBACK_1(GameScene::onUpdateMenuCallback, this));
 	updateMenu->setAnchorPoint(Vec2(1, 0));
 	updateMenu->setPosition(visibleSize.width / 2, -visibleSize.height / 2);
 	auto menu = Menu::create(updateMenu, nullptr);
 	addChild(menu);
 
-	//关闭测试
+	//关闭测试，所以屏幕上就没有显示出来
 	menu->setEnabled(false);
 	menu->setVisible(false);
 
 	return true;
 }
 
-void GameScene::publishScore()
+ //存储游戏分数
+void GameScene::storeScore()
 {
 	auto userdefault = UserDefault::getInstance();
 	
@@ -88,15 +92,17 @@ void GameScene::publishScore()
 	
 	//存储本次游戏分数
 	char score_str[100] = {0};
-	sprintf(score_str, "%d", m_score);
+	sprintf(score_str, "%d", m_score);//把整数m_score 打印成一个字符串保存在score_str中
 	userdefault->setStringForKey("LastScore", score_str);
 
 	//存储最佳游戏分数
 	auto bestscore = userdefault->getStringForKey("BestScore");
-	if (m_score > atoi(bestscore.c_str()))
+	if (m_score > atoi(bestscore.c_str()))         //atoi (表示 ascii to integer)是把字符串转换成整型数的一个函数
+		                                           //string.c_str是Borland封装的String类中的一个函数，它返回当前字符串的首字符地址
 		userdefault->setStringForKey("BestScore", score_str);
 }
 
+//开启倒计时
 void GameScene::onReducingBonus(float dt)
 {
 	m_bonusbar->setPercent(m_bonusbar->getPercent()-0.2);
@@ -104,16 +110,16 @@ void GameScene::onReducingBonus(float dt)
 	//倒计时结束，游戏结束，保存游戏分数
 	if (m_bonusbar->getPercent() == 0)
 	{
-		unschedule(schedule_selector(GameScene::onReducingBonus));
+		unschedule(schedule_selector(GameScene::onReducingBonus));//取消自定义的定时器
 
 		log("game over!");
-		publishScore();
+		storeScore();
 		auto scene = GameOverScene::createScene();
 		Director::getInstance()->replaceScene(TransitionFade::create(1.0, scene));
 	}
 
-	auto fadein = FadeIn::create(0.1);
-	auto fadeout = FadeOut::create(0.1);
+	auto fadein = FadeIn::create(0.1);//FadeIn是从暗逐渐变亮
+	auto fadeout = FadeOut::create(0.1);//FadeOut从亮逐渐变消失
 	CallFunc* call = nullptr;
 	//根据倒计时条进度刷新背景
 	if (m_bonusbar->getPercent() < 100 && m_bonusbar->getPercent() > 75)
@@ -186,10 +192,10 @@ void GameScene::addBonus(int bonus)
 
 void GameScene::onUpdateMenuCallback(Ref*)
 {
-	//只是测试用，宝石消除过程中不能更新布局，不然崩溃
-	m_jewelsgrid->updateMap();
+	//只是测试用，卡片消除过程中不能更新布局，不然崩溃
+	m_Cardsgrid->updateMap();
 
-	if (m_jewelsgrid->isDeadMap())
+	if (m_Cardsgrid->isDeadMap())
 	{
 		log("this is a dead map!");
 	}

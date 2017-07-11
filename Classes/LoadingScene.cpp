@@ -4,23 +4,38 @@
 
 using namespace CocosDenshion;
 
+
+//创建场景
 Scene* LoadingScene::createScene()
 {
+	//创建一个自释放的场景对象
 	auto scene = Scene::create();
+
+	//创建一个自释放的画面层对象
 	auto layer = LoadingScene::create();
+	
+	//把创建的画面层添加到场景中
+    //一个场景可以添加多个画面层
 	scene->addChild(layer);
+	
+	//返回这个创建的场景
 	return scene;
 }
 
+// 场景初始化方法
 bool LoadingScene::init()
 {
+	// 首先进行父类初始化
 	Layer::init();
 
+	//getVisibleSize：获得视口（可视区域）的大小，
+	//若是DesignResolutionSize跟屏幕尺寸一样大，则getVisibleSize便是getWinSize。
+	//???????????????
 	auto winSize = Director::getInstance()->getWinSize();
 
 
 
-	m_texture_num = 0; //当前已加载的图片
+	m_texture_num = 0; //当前已加载的卡片
 	int *ptexture_num = &m_texture_num;
 
 	auto label = Label::createWithSystemFont("Loading...", "Arial", 36);
@@ -36,14 +51,14 @@ bool LoadingScene::init()
 		log("m_texture_num=%d",*ptexture_num);
 	};
 
-	//异步预加载宝石
-	TextureCache::getInstance()->addImageAsync("jewel1.png", addTextureCallback);
-	TextureCache::getInstance()->addImageAsync("jewel2.png", addTextureCallback);
-	TextureCache::getInstance()->addImageAsync("jewel3.png", addTextureCallback);
-	TextureCache::getInstance()->addImageAsync("jewel4.png", addTextureCallback);
-	TextureCache::getInstance()->addImageAsync("jewel5.png", addTextureCallback);
-	TextureCache::getInstance()->addImageAsync("jewel6.png", addTextureCallback);
-	TextureCache::getInstance()->addImageAsync("jewel7.png", addTextureCallback);
+	//异步预加载卡片（异步预加载？？？？？？？？？？？？）
+	TextureCache::getInstance()->addImageAsync("card1.png", addTextureCallback);
+	TextureCache::getInstance()->addImageAsync("card2.png", addTextureCallback);
+	TextureCache::getInstance()->addImageAsync("card3.png", addTextureCallback);
+	TextureCache::getInstance()->addImageAsync("card4.png", addTextureCallback);
+	TextureCache::getInstance()->addImageAsync("card5.png", addTextureCallback);
+	TextureCache::getInstance()->addImageAsync("card6.png", addTextureCallback);
+	TextureCache::getInstance()->addImageAsync("card7.png", addTextureCallback);
 
 	//异步预加载背景图
 	TextureCache::getInstance()->addImageAsync("bground1.png", addTextureCallback);
@@ -62,16 +77,18 @@ bool LoadingScene::init()
 	schedule(schedule_selector(LoadingScene::onTextureLoading));
 
 	//预加载音效
-	SimpleAudioEngine::getInstance()->preloadEffect("crush.ogg");
+	SimpleAudioEngine::getInstance()->preloadEffect("eliminate.ogg");
 	SimpleAudioEngine::getInstance()->preloadEffect("swapback.ogg");
 
 	return true;
 }
 
+
+//检测纹理加载是否完毕
 void LoadingScene::onTextureLoading(float dt)
 {
-	//一旦图片加载完毕，那么进入游戏场景
-	if (m_texture_num == 16)
+	//一旦卡片加载完毕，那么进入游戏场景GameScene
+	if (m_texture_num == 16)  //加载了16张卡片
 	{
 		unschedule(schedule_selector(LoadingScene::onTextureLoading));
 		log("loading down!");

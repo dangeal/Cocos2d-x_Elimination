@@ -7,7 +7,7 @@
 USING_NS_CC;
 using namespace ui;
 
-class JewelsGrid;
+class Grid;
 
 class GameScene : public Layer
 {
@@ -22,16 +22,16 @@ public:
 private:
 	static LoadingBar* m_bonusbar;
 	static int m_score;
-	static Label* m_scorelabel;
+	static Label* m_scorelabel; //分数值
 
 private:
 	void onUpdateMenuCallback(Ref*);
 
 	void onReducingBonus(float dt); //开启倒计时
 
-	void publishScore(); //存储游戏分数
+	void storeScore(); //存储游戏分数
 
-	JewelsGrid* m_jewelsgrid;
+	Grid* m_Cardsgrid;
 	Sprite* m_bg;
 };
 
